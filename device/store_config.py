@@ -12,6 +12,9 @@ def config_load(filename):
         new_config = yaml.load(f, yaml.loader.FullLoader)
     # if an entry is in both dictionaries, the new_config is choosen
 
+    # TODO: check if protecting against overwriting read only data is neccessary
+    # TODO: input sanitization
+
     config = default_config
 
     for config_type in new_config.keys():

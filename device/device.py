@@ -46,9 +46,6 @@ class CH9121:
                 response[i * protocol.message_size : (i + 1) * protocol.message_size])
             assert command_header == protocol.Ack.ACK_SEARCH.value
             device_macs.append(ch9121_mac)
-        print(f'Found {responses_count} devices')
-        for i in range(responses_count):
-            print(device_macs[i].hex())
         t.join()
         return device_macs
 
@@ -64,7 +61,11 @@ class CH9121:
             exit(1)
         command_header, ch9121_mac, pc_mac, data_area_len, data = communication_frame.deserialize_header(
                 response)
-        assert command_header == protocol.Ack.ACK_GET.value
+        if command_header == protocol.Ack.ACK_GET.value:
+            print('Device responded with ACK')
+        elif command_header == protocol.NAck.NACK_GET.value:
+            print('Device responded with NACK. Terminating.')
+            exit(1)
         config = communication_frame.deserialize_config(data)
         t.join()
 
@@ -79,9 +80,9 @@ class CH9121:
             command_header, ch9121_mac, pc_mac, data_area_len, data = communication_frame.deserialize_header(
                     response)
             if command_header == protocol.Ack.ACK_SET.value:
-                print('Config request: Device responded with ACK')
+                print('Device responded with ACK')
             elif command_header == protocol.NAck.NACK_SET.value:
-                print('Config request: Device responded with NACK')
+                print('Device responded with NACK')
             else:
                 print('Return command header unknown')
         except TimeoutError:
@@ -97,7 +98,7 @@ class CH9121:
             command_header, ch9121_mac, pc_mac, data_area_len, data = communication_frame.deserialize_header(
                     response)
             if command_header == protocol.Ack.ACK_RESET_TO_FACTORY.value:
-                print('Config request: Device responded with ACK')
+                print('Device responded with ACK')
             else:
                 print('Return command header unknown')
         except TimeoutError:
