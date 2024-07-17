@@ -13,7 +13,7 @@ How to use this program. There are 2 options. Set and get configuration.
 
 ### List devices
 
-`python3 sch9121.py -i eth0 -l`
+`python3 ch9121.py -i eth0 -l`
 
 Lists CH9121 all devices in network.
 
@@ -25,11 +25,11 @@ It will print configuration to STDOUT in yaml format.
 
 **Note** Store config to file:
 
-`python3 sch9121.py -i eth0 -s config.yml > config.yml`
+`python3 ch9121.py -i eth0 -s config.yml > config.yml`
 
 ### Set parameters
 
-`python3 sch9121.py -i eth0 -s config.yml`
+`python3 ch9121.py -i eth0 -s config.yml`
 
 ## Config yaml
 
