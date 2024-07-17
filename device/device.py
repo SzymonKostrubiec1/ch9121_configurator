@@ -39,7 +39,7 @@ class CH9121:
             response = self.socket_receive.recv(protocol.message_size * self.search_max_devices)
         except TimeoutError:
             response = None
-        responses_count = int(len(response) / protocol.message_size)
+        responses_count = int(len(response) / protocol.message_size) if response is not None else 0
         device_macs = []
         for i in range(responses_count):
             command_header, ch9121_mac, pc_mac, data_area_len, data = communication_frame.deserialize_header(
@@ -70,23 +70,36 @@ class CH9121:
 
         return config
 
-    def set_config(self):
-        set_packet = """43 48 39 31 32 31 5F 43 46 47 5F 46 4C 41 47 00 01 ff ff ff ff ff ff F4 8E 38
-        8B FC 9F CC 21 21 01 02 03 43 48 39 31 32 31 20 00 00 00 00 00 00 00 00 00 00
-        00 00 00 00 02 03 04 05 06 07 C0 A8 01 14 C0 A8 01 01 FF FF FF 00 00 50 00 00
-        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF 00 FF FF FF FF FF FF FF FF
-        00 00 02 01 B8 0B C0 A8 01 64 D0 07 80 25 00 00 08 01 04 01 00 04 00 00 00 00
-        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF
-        FF FF FF FF FF FF FF FF FF FF FF FF FF 01 01 01 00 D0 07 C0 A8 01 0A E8 03 00
-        C2 01 00 08 01 04 01 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-        00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF FF FF FF FF FF FF FF FF FF FF
-        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"""
-
-        set_packet = set_packet.replace(' ', '').replace('\n', '')
-        set_packet = bytes.fromhex(set_packet)
+    def set_config(self, config, module_mac):
+        set_packet = communication_frame.set_frame(config, module_mac=module_mac)
         t = threading.Thread(target=send_data, args=(set_packet, self.target_ip, self.target_port))
         t.start()
-        response = self.socket_receive.recv(285)
-        print(response)
+        try:
+            response = self.socket_receive.recv(285)
+            command_header, ch9121_mac, pc_mac, data_area_len, data = communication_frame.deserialize_header(
+                    response)
+            if command_header == protocol.Ack.ACK_SET.value:
+                print('Config request: Device responded with ACK')
+            elif command_header == protocol.NAck.NACK_SET.value:
+                print('Config request: Device responded with NACK')
+            else:
+                print('Return command header unknown')
+        except TimeoutError:
+            print('Timed out waiting for response')
+        t.join()
+
+    def reset_to_factory_settings(self, module_mac):
+        reset_packet = communication_frame.reset_frame(module_mac)
+        t = threading.Thread(target=send_data, args=(reset_packet, self.target_ip, self.target_port))
+        t.start()
+        try:
+            response = self.socket_receive.recv(285)
+            command_header, ch9121_mac, pc_mac, data_area_len, data = communication_frame.deserialize_header(
+                    response)
+            if command_header == protocol.Ack.ACK_RESET_TO_FACTORY.value:
+                print('Config request: Device responded with ACK')
+            else:
+                print('Return command header unknown')
+        except TimeoutError:
+            print('Timed out waiting for response')
         t.join()

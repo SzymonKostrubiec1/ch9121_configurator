@@ -87,3 +87,8 @@ class Ack(Enum):
     ACK_GET = 0x82
     ACK_RESET_TO_FACTORY = 0x83
     ACK_SEARCH = 0x84
+    
+class NAck(Enum):
+    NACK_SEARCH = 0xc0
+    NACK_SET = 0xc1
+    NACK_GET = 0xc2
