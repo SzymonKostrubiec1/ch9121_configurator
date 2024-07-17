@@ -3,6 +3,7 @@ import time
 import threading
 from . import protocol
 from . import communication_frame
+from . import store_config
 
 broadcast_ip = "192.168.1.255"
 send_port = 50000
@@ -64,8 +65,10 @@ class CH9121:
         command_header, ch9121_mac, pc_mac, data_area_len, data = communication_frame.deserialize_header(
                 response)
         assert command_header == protocol.Ack.ACK_GET.value
-        communication_frame.deserialize_config(data)
+        config = communication_frame.deserialize_config(data)
         t.join()
+
+        return config
 
     def set_config(self):
         set_packet = """43 48 39 31 32 31 5F 43 46 47 5F 46 4C 41 47 00 01 ff ff ff ff ff ff F4 8E 38
