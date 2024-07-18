@@ -3,6 +3,7 @@ import time
 import threading
 from . import protocol
 from . import communication_frame
+from sys import exit
 
 send_port = 50000
 receive_port = 60000
