@@ -13,9 +13,6 @@ jobs:
     outputs:
       release_url: ${{ steps.create_release_step.outputs.upload_url }}
     steps:
-    - name: Get version
-      id: get-version
-      run: echo VER=$(cat version) >> "$GITHUB_OUTPUT"
     - name: Create Release
       id: create_release_step
       uses: actions/create-release@v1
@@ -23,7 +20,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: latest
-        release_name: Release ${{ steps.get-version.outputs.VER }}
+        release_name: Release latest
         draft: false
         prerelease: false
     
@@ -42,7 +39,10 @@ jobs:
           python_ver: '3.10'
           spec: 'ch9121.spec'
           requirements: 'requirements.txt'
-          options: --onefile, --windowed,
+
+      - name: Find executable
+        id: find-exe
+        run: echo FILE=${{ steps.create-executable.outputs.executable_oath }}$(ls ${{ steps.create-executable.outputs.executable_oath }}) >> $GITHUB_OUTPUT
 
       - name: Upload artifacts
         uses: actions/upload-release-asset@v1
@@ -50,7 +50,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ needs.create-release.outputs.release_url }}
-          asset_path: ${{ steps.create-executable.outputs.executable_path }}
+          asset_path: ${{ steps.find-exe.outputs.FILE }}
           asset_name: ch9121_${{ runner.os }}
           asset_content_type: application/zip
           
