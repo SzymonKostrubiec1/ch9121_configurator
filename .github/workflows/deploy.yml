@@ -13,20 +13,27 @@ jobs:
     outputs:
       release_url: ${{ steps.create_release_step.outputs.upload_url }}
     steps:
+    - name: Get version
+      id: get-version
+      run: echo VER=$(cat version) >> "$GITHUB_OUTPUT"
     - name: Create Release
       id: create_release_step
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: Tag
-        release_name: Release 
+        tag_name: latest
+        release_name: Release ${{ steps.get-version.outputs.VER }}
         draft: false
         prerelease: false
     
   pyinstaller-build:
+    name: Pyinstaller build
     needs: create-release
-    runs-on: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - name: Create Executable
         uses: Martin005/pyinstaller-action@v1.2.0
