@@ -3,29 +3,30 @@ import time
 import threading
 from . import protocol
 from . import communication_frame
-from . import store_config
 
-broadcast_ip = "192.168.1.255"
 send_port = 50000
 receive_port = 60000
 
-this_device_mac = "50 54 7b b5 0e 56"
 SO_BINDTODEVICE = 25
 
 def send_data(data, broadcast_ip, port):
     socket_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     socket_send.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    time.sleep(0.2)
+    time.sleep(0.1)
     socket_send.sendto(data, (broadcast_ip, port))
 
 class CH9121:
 
-    def __init__(self, interface=None, broadcast_ip=broadcast_ip, 
+    def __init__(self, broadcast_ip,  interface=None,
                  send_port=send_port, receive_port=receive_port):
         self.socket_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.socket_receive.bind(('', receive_port))
         if interface is not None:
-            self.socket_receive.setsockopt(socket.SOL_SOCKET, SO_BINDTODEVICE, str(interface).encode())
+            try:
+                self.socket_receive.setsockopt(socket.SOL_SOCKET, SO_BINDTODEVICE, str(interface).encode())
+            except OSError as error:
+                print('Could not specify interface: ', error, '- Interface specification ignored.')
+        self.socket_receive.settimeout(3)
         self.target_ip = broadcast_ip
         self.target_port = send_port
         self.search_max_devices = 5
@@ -34,7 +35,6 @@ class CH9121:
         search_packet = communication_frame.search_frame()
         t = threading.Thread(target=send_data, args=(search_packet, self.target_ip, self.target_port))
         t.start()
-        self.socket_receive.settimeout(3)
         try:
             response = self.socket_receive.recv(protocol.message_size * self.search_max_devices)
         except TimeoutError:
@@ -53,9 +53,8 @@ class CH9121:
         get_packet = communication_frame.get_frame(module_mac=module_mac)
         t = threading.Thread(target=send_data, args=(get_packet, self.target_ip, self.target_port))
         t.start()
-        # TODO: handle possibility of communicating with many devices
         try:
-            response = self.socket_receive.recv(285)
+            response = self.socket_receive.recv(protocol.message_size)
         except TimeoutError:
             print("Timed out waiting for a get response packet. Terminating")
             exit(1)
@@ -76,17 +75,20 @@ class CH9121:
         t = threading.Thread(target=send_data, args=(set_packet, self.target_ip, self.target_port))
         t.start()
         try:
-            response = self.socket_receive.recv(285)
+            response = self.socket_receive.recv(protocol.message_size)
             command_header, ch9121_mac, pc_mac, data_area_len, data = communication_frame.deserialize_header(
                     response)
             if command_header == protocol.Ack.ACK_SET.value:
                 print('Device responded with ACK')
             elif command_header == protocol.NAck.NACK_SET.value:
                 print('Device responded with NACK')
+                exit(1)
             else:
                 print('Return command header unknown')
+                exit(1)
         except TimeoutError:
-            print('Timed out waiting for response')
+            print('Timed out waiting for response. Terminating')
+            exit(1)
         t.join()
 
     def reset_to_factory_settings(self, module_mac):
@@ -94,7 +96,7 @@ class CH9121:
         t = threading.Thread(target=send_data, args=(reset_packet, self.target_ip, self.target_port))
         t.start()
         try:
-            response = self.socket_receive.recv(285)
+            response = self.socket_receive.recv(protocol.message_size)
             command_header, ch9121_mac, pc_mac, data_area_len, data = communication_frame.deserialize_header(
                     response)
             if command_header == protocol.Ack.ACK_RESET_TO_FACTORY.value:

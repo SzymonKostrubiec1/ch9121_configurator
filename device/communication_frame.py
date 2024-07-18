@@ -20,15 +20,13 @@ def deserialize_header(bytes_buffer):
     data = bytes_buffer[30 : 30 + data_area_len]
     return command_header, ch9121_mac, pc_mac, data_area_len, data
 
-def serialize(command: protocol.Commands, module_mac=None, pc_mac=None, payload=None): 
+def serialize(command: protocol.Commands, module_mac=bytes.fromhex(12 * 'f'), pc_mac=bytes.fromhex(12 * '0'), payload=None): 
     length = len(payload) if payload is not None else 0
-    module_mac = module_mac if module_mac is not None else bytes.fromhex(12 * 'f')
-    pc_mac = pc_mac if pc_mac is not None else bytes.fromhex(12 * '0')
     serialize_format = 'B6s6sB'
     if payload is None:
         payload = bytes.fromhex(protocol.payload_size * 2 * '0')
     elif len(payload) < protocol.payload_size:
-        pad_amount = protocol.payload_size- len(payload)
+        pad_amount = protocol.payload_size - len(payload)
         payload += bytes.fromhex(2 * pad_amount * '0')
     elif len(payload) > protocol.payload_size:
         raise ValueError('Message data section too long')    
@@ -63,7 +61,7 @@ def deserialize_config(data_bytes):
     """
     # deserialize DEVICEHW_CONFIG
     deserialization_format = 'BBBBB21s6s4s4s4sBBB8sB8sBB8s'
-    device_hw_config = data_bytes[:74]
+    device_hw_config = data_bytes[:protocol.device_hw_config_size]
     dev_type, aux_dev_type, sn, hardware_ver, software_ver,\
     module_name, dev_mac, dev_ip, dev_gateway_ip, dev_ip_mask,\
     dhcp_enable, reserved_1, reserved_1a, reserved_2, reserved_3, reserved_4,\
@@ -86,8 +84,9 @@ def deserialize_config(data_bytes):
     # deserialize DEVICEPORT_CONFIG
     # note: ULONG is 4 bytes wide
     deserialization_format = "BBBBH4sHiBBBBiiBBB20s14s"
-    device_port_1_config_bytes = data_bytes[74: 74 + 65]
-    device_port_2_config_bytes = data_bytes[74 + 65: 74 + 65 * 2]
+    device_port_1_config_bytes = data_bytes[protocol.device_hw_config_size: protocol.device_hw_config_size + protocol.device_port_config_size]
+    device_port_2_config_bytes = data_bytes[protocol.device_hw_config_size + protocol.device_port_config_size
+                                            : protocol.device_hw_config_size + 2 * protocol.device_port_config_size]
     """
     struct __attribute__((__packed__)) DEVICEPORT_CONFIG
     {

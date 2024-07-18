@@ -1,6 +1,6 @@
 # CH9121 configurator
 
-Mini python program to set & get CH9121 chip parameters
+Mini python program to set & get CH9121 chip parameters.
 
 ## FAQ
 
@@ -10,7 +10,8 @@ sends replies to broadcast address to port 60000.
 ## Usage
 
 ```cmd
-usage: CH9121 Programmer [-h] [-s] [-g] [--set] [-r] [-if INPUT_FILE] [-of OUTPUT_FILE] [-i INTERFACE] [-m MAC]
+$ python ch9121.py --help 
+usage: CH9121 Programmer [-h] [-s] [-g] [--set] [-r] [-if INPUT_FILE] [-of OUTPUT_FILE] [-i INTERFACE] [-m MAC] [-b BROADCAST]
 
 Multiple actions may be specified and performed, in the order specified below.
 
@@ -27,13 +28,15 @@ options:
   -i INTERFACE, --interface INTERFACE
                         Specify network interface to use
   -m MAC, --mac MAC     Target MAC. If unspecfied, the program will target the only device on network or stop, if there is more than one. Hexadecimal format with no separators
+  -b BROADCAST, --broadcast BROADCAST
+                        Specify broadcast IP. Can be determined automatically, if --interface is specified.
 ```
 
 ## Config.yaml
 
-Configuration is specified in .yaml file. All parameters are optional and can be taken from default_config.yaml internally.
-
-Some parameters are read-only. These are saved when the program downloads the configuration, but are ignored when loading configuration from file.
+The device allows for reprogramming of read-only parameters and does not restore them upon factory reset.
+Since all values must be supplied while programming, the config should be downloaded from the device,
+modified, and then reprogrammed.
 
 ```yaml
 HW Config:

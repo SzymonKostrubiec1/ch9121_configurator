@@ -2,6 +2,7 @@ import argparse
 
 from device import device
 from device import store_config
+from device import net
 
 parser = argparse.ArgumentParser(prog='CH9121 Programmer', description=
                                  'Multiple actions may be specified and performed,'
@@ -25,20 +26,23 @@ parser.add_argument('-i', '--interface', default='enxc84d4425916c',
 parser.add_argument('-m', '--mac', default=None, help='Target MAC. If unspecfied, '
                     'the program will target the only device on network or stop, if there '
                     'is more than one. Hexadecimal format with no separators')
+parser.add_argument('-b', '--broadcast', default=None, help='Specify broadcast IP. '
+                    'Can be determined automatically, if --interface is specified.')
 args = parser.parse_args()
 
-module = device.CH9121(args.interface)
+broadcast = args.broadcast if args.broadcast is not None else net.get_broadcast_address(args.interface)
+module = device.CH9121(broadcast_ip=broadcast, interface=args.interface)
 
-target_mac = args.mac
+target_mac = int(args.mac, 16).to_bytes(6, byteorder='big') if args.mac is not None else None
 
 if args.search:
     print("Searching")
     module_macs = module.search()
 
     if module_macs:
-        print(f'Found {len(module_macs)} devices:')
+        print(f'Found {len(module_macs)} device' + 's' * bool(len(module_macs) > 1) + ':')
         for i in range(len(module_macs)):
-            print(f'{i}. {module_macs[i]}')
+            print(f'{i + 1}. {module_macs[i].hex()}')
 
     else:
         print('No devices found')
@@ -50,23 +54,25 @@ if args.get:
     if target_mac is None:
         print('No target MAC specified and no available devices found.')
         exit(1)
-    print(f'Asking {target_mac} for its configuration')
+    print(f'Asking {target_mac.hex()} for its configuration')
     config = module.get_config(module_mac=target_mac)
     store_config.config_save(config, args.output_file)
+
 if args.set:
     if target_mac is None:
         print('No target MAC specified and no available devices found.')
         exit(1)
-    if args.output_file is None:
+    if args.input_file is None:
         print('Set was specified but no configuration file was selected')
         exit(1)
-    print(f'Sending configuration specified in {args.output_file} to {target_mac}')
-    config = store_config.config_load(args.output_file)
+    print(f'Sending configuration specified in {args.input_file} to {target_mac.hex()}')
+    config = store_config.config_load(args.input_file)
+    config['Device MAC'] = target_mac
     module.set_config(config, module_mac=target_mac)
 
 if args.reset:
     if target_mac is None:
         print('No target MAC specified and no available devices found.')
         exit(1)
-    print(f'Asking {target_mac} to revert to factory settings.')
+    print(f'Asking {target_mac.hex()} to revert to factory settings.')
     module.reset_to_factory_settings(module_mac=target_mac)
