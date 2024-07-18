@@ -4,6 +4,9 @@ from device import device
 from device import store_config
 from device import net
 
+# needed by pyinstaller
+from sys import exit
+
 parser = argparse.ArgumentParser(prog='CH9121 Programmer', description=
                                  'Multiple actions may be specified and performed,'
                                  ' in the order specified below.')
