@@ -52,5 +52,5 @@ jobs:
           upload_url: ${{ needs.create-release.outputs.release_url }}
           asset_path: ${{ steps.create-executable.outputs.executable_path }}
           asset_name: ch9121_${{ runner.os }}
-        
+          asset_content_type: application/zip
           
