@@ -3,9 +3,7 @@ on:
   push:
     tags:
     - 'v*' # push events to main tagged with release version 
-    branches:
-      - "master"
-      - "main"
+
 jobs:
   create-release:
     name: Create release
@@ -19,13 +17,13 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: latest
+        tag_name: ${{ github.ref_name }}
         release_name: Release latest
         draft: false
         prerelease: false
     
   pyinstaller-build-linux:
-    name: Pyinstaller build
+    name: Pyinstaller build on Ubuntu
     needs: create-release
     runs-on: [ubuntu-latest]
     steps:
@@ -48,7 +46,7 @@ jobs:
           asset_content_type: application/zip
           
   pyinstaller-build-windows:
-    name: Pyinstaller build
+    name: Pyinstaller build on Windows
     needs: create-release
     runs-on: [windows-latest]
     steps:
