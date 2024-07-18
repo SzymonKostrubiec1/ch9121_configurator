@@ -35,6 +35,9 @@ module = device.CH9121(broadcast_ip=broadcast, interface=args.interface)
 
 target_mac = int(args.mac, 16).to_bytes(6, byteorder='big') if args.mac is not None else None
 
+if not(args.search or args.get or args.reset or args.set):
+    parser.print_help()
+
 if args.search:
     print("Searching")
     module_macs = module.search()

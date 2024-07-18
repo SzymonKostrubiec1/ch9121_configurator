@@ -53,7 +53,7 @@ HW Config:
   Serial port negotiation configuration enable: false
   Software version: 6 # read only
 Port 1 Config:
-  Baudrate: 9600 # 300---9216000 bps
+  Baudrate: 9600 # 300---921600 bps
   Clear RX data buffer on connection enable: false
   DNS Enable: false
   Data size: 8 # 5 - 8 bits
