@@ -7,9 +7,9 @@ on:
       - "master"
       - "main"
 jobs:
+  create-release:
     name: Create release
     runs-on: [ubuntu-latest]
-    id: create-release
     outputs:
       release_url: ${{ steps.create_release_step.outputs.upload_url }}
     steps:
