@@ -42,7 +42,7 @@ jobs:
 
       - name: Find executable
         id: find-exe
-        run: echo FILE=${{ steps.create-executable.outputs.executable_oath }}$(ls ${{ steps.create-executable.outputs.executable_oath }}) >> $GITHUB_OUTPUT
+        run: echo FILE=${{ steps.create-executable.outputs.executable_path }}$(ls ${{ steps.create-executable.outputs.executable_path }}) >> $GITHUB_OUTPUT
 
       - name: Upload artifacts
         uses: actions/upload-release-asset@v1
