@@ -7,14 +7,14 @@ on:
       - "master"
       - "main"
 jobs:
-  create-release:
     name: Create release
     runs-on: [ubuntu-latest]
+    id: create-release
     outputs:
-      release_url: ${{ steps.create_release.outputs.upload_url }}
+      release_url: ${{ steps.create_release_step.outputs.upload_url }}
     steps:
     - name: Create Release
-      id: create_release
+      id: create_release_step
       uses: actions/create-release@1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -42,7 +42,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ jobs.create-release.outputs.release_url }}
+          upload_url: ${{ needs.create-release.outputs.release_url }}
           asset_path: ${{ steps.create-executable.outputs.executable_path }}
           asset_name: ch9121_${{ runner.os }}
         
